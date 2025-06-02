@@ -1,0 +1,58 @@
+menu "Environment Variables"
+
+config WIFI_SSID
+    string "WiFi SSID"
+    default ""
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+    default ""
+
+config MQTT_BROKER_URL
+    string "MQTT Broker URL"
+    default "mqtt://localhost"
+
+config MQTT_CLIENT_ID
+    string "MQTT Client ID"
+    default "heatpump-controller"
+
+config MQTT_QOS
+    int "MQTT Quality of Service (QoS)"
+    range 0 2
+    default 1
+    help
+        0 - At most once
+        1 - At least once
+        2 - Exactly once
+
+config MQTT_RETENTION_POLICY
+    int "MQTT Retention Policy"
+    range 0 1
+    default 0
+    help
+        0 - no retention
+        1 - retain last message
+
+config MQTT_TEMPERATURE_SENSOR_TOPIC
+    string "MQTT Current State Topic"
+    default "heatpump/temperature-sensor"
+    help
+        MQTT topic to publish temperature readings to.
+
+config MQTT_IR_TRANSMITTER_TOPIC
+    string "MQTT IR Transmitter Topic"
+    default "heatpump/ir-transmitter"
+    help
+        MQTT topic to subscribe to and listen for ir signals for transmission.
+
+config TEMPERATURE_SENSOR_GPIO
+    int "Temperature Sensor GPIO Pin"
+    default 4
+
+config TEMPERATURE_PUBLISH_INTERVAL_MS
+    int "Temperature Publish Interval (ms)"
+    default 30000
+    help
+        Interval for how often the controller publishes temperature readings.
+
+endmenu

@@ -95,50 +95,28 @@ esp_err_t IRTransmitter::handle_ir_transmission(const char* json_signal) {
 }
 
 esp_err_t IRTransmitter::send_signal(const char* signal) {
+  esp_err_t err;
+
   // Send header
-  esp_err_t err = send_pulse(HEADER_PULSE);
-  if (err != ESP_OK) {
-    return err;
-  }
-  err = send_space(HEADER_SPACE);
-  if (err != ESP_OK) {
-    return err;
-  }
+  if (err = send_pulse(HEADER_PULSE), err != ESP_OK) return err;
+  if (err = send_space(HEADER_SPACE), err != ESP_OK) return err;
 
   // Iterate through each bit in the signal string
   for (size_t i = 0; i < strlen(signal); i++) {
     if (signal[i] == '1') {
-      err = send_pulse(ONE_PULSE);
-      if (err != ESP_OK) {
-        return err;
-      }
-      err = send_space(ONE_SPACE);
-      if (err != ESP_OK) {
-        return err;
-      }
+      if (err = send_pulse(ONE_PULSE), err != ESP_OK) return err;
+      if (err = send_space(ONE_SPACE), err != ESP_OK) return err;
     } else if (signal[i] == '0') {
-      err = send_pulse(ZERO_PULSE);
-      if (err != ESP_OK) {
-        return err;
-      }
-      err = send_space(ZERO_SPACE);
-      if (err != ESP_OK) {
-        return err;
-      }
+      if (err = send_pulse(ZERO_PULSE), err != ESP_OK) return err;
+      if (err = send_space(ZERO_SPACE), err != ESP_OK) return err;
     } else {
       return ESP_ERR_INVALID_ARG;
     }
   }
 
   // Send end pulse
-  err = send_pulse(END_PULSE);
-  if (err != ESP_OK) {
-    return err;
-  }
-  err = send_space(END_SPACE);
-  if (err != ESP_OK) {
-    return err;
-  }
+  if (err = send_pulse(END_PULSE), err != ESP_OK) return err;
+  if (err = send_space(END_SPACE), err != ESP_OK) return err;
 
   return ESP_OK;
 }

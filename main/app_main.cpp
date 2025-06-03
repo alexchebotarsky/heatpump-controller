@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "IRTransmitter.hpp"
+#include "LoopManager.hpp"
 #include "MQTTManager.hpp"
 #include "TemperatureSensor.hpp"
 #include "WiFiManager.hpp"
@@ -8,9 +9,6 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
-
-constexpr const int TEMPERATURE_PUBLISH_INTERVAL_MS =
-    CONFIG_TEMPERATURE_PUBLISH_INTERVAL_MS;
 
 // MQTT topics
 constexpr const char* MQTT_TEMPERATURE_SENSOR_TOPIC =
@@ -21,6 +19,7 @@ constexpr const char* MQTT_IR_TRANSMITTER_TOPIC =
 WiFiManager wifi(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
+LoopManager loop_manager(CONFIG_TEMPERATURE_PUBLISH_INTERVAL_MS);
 
 TemperatureSensor temperature_sensor(CONFIG_TEMPERATURE_SENSOR_GPIO);
 IRTransmitter ir_transmitter(CONFIG_IR_TRANSMITTER_GPIO,
@@ -82,13 +81,8 @@ extern "C" void app_main(void) {
     }
   });
 
-  TickType_t last_check = 0;
   while (true) {
-    TickType_t now = xTaskGetTickCount();
-
-    if (now - last_check >= pdMS_TO_TICKS(TEMPERATURE_PUBLISH_INTERVAL_MS)) {
-      last_check = now;
-
+    if (loop_manager.should_run()) {
       TemperatureReading reading = temperature_sensor.read();
 
       char message[72];
@@ -98,6 +92,7 @@ extern "C" void app_main(void) {
       mqtt.publish(MQTT_TEMPERATURE_SENSOR_TOPIC, message);
     }
 
+    // Minimal delay to avoid busy-waiting
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }

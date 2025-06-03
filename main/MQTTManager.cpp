@@ -124,7 +124,7 @@ void MQTTManager::handle_message(esp_mqtt_event_handle_t event) {
 
   for (const auto& subscription : subscriptions) {
     if (strcmp(subscription.topic, topic.c_str()) == 0) {
-      subscription.handler(message.c_str(), event->data_len);
+      subscription.handler(message.c_str());
       return;
     }
   }

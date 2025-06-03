@@ -55,10 +55,9 @@ extern "C" void app_main(void) {
     }
   });
 
-  mqtt.subscribe(MQTT_IR_TRANSMITTER_TOPIC,
-                 [](const char* message, const int length) {
-                   printf("Transmitting IR signal: %s\n", message);
-                 });
+  mqtt.subscribe(MQTT_IR_TRANSMITTER_TOPIC, [](const char* message) {
+    printf("Transmitting IR signal: %s\n", message);
+  });
 
   TickType_t last_check = 0;
   while (true) {

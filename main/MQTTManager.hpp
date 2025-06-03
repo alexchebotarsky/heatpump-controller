@@ -7,7 +7,7 @@
 #include "esp_event.h"
 #include "mqtt_client.h"
 
-typedef void (*Handler)(const char* message, const int length);
+typedef void (*Handler)(const char* message);
 
 struct Subscription {
   const char* topic;

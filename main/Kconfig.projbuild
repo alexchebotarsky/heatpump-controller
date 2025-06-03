@@ -49,6 +49,20 @@ config TEMPERATURE_SENSOR_GPIO
     int "Temperature Sensor GPIO Pin"
     default 4
 
+config IR_TRANSMITTER_GPIO
+    int "IR Transmitter GPIO Pin"
+    default 5
+
+config IR_TRANSMITTER_PWM_CHANNEL
+    int "IR Transmitter PWM Channel"
+    range 0 7
+    default 0
+
+config IR_TRANSMITTER_PWM_TIMER
+    int "IR Transmitter PWM Timer"
+    range 0 3
+    default 0
+
 config TEMPERATURE_PUBLISH_INTERVAL_MS
     int "Temperature Publish Interval (ms)"
     default 30000

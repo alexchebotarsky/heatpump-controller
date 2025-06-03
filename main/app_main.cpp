@@ -1,6 +1,8 @@
 #include <stdio.h>
 
+#include "IRTransmitter.hpp"
 #include "MQTTManager.hpp"
+#include "TemperatureSensor.hpp"
 #include "WiFiManager.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -19,6 +21,11 @@ constexpr const char* MQTT_IR_TRANSMITTER_TOPIC =
 WiFiManager wifi(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
+
+TemperatureSensor temperature_sensor(CONFIG_TEMPERATURE_SENSOR_GPIO);
+IRTransmitter ir_transmitter(CONFIG_IR_TRANSMITTER_GPIO,
+                             CONFIG_IR_TRANSMITTER_PWM_CHANNEL,
+                             CONFIG_IR_TRANSMITTER_PWM_TIMER);
 
 extern "C" void app_main(void) {
   esp_err_t err = nvs_flash_init();
@@ -39,6 +46,18 @@ extern "C" void app_main(void) {
     esp_restart();
   }
 
+  err = temperature_sensor.init();
+  if (err != ESP_OK) {
+    printf("Error initializing temperature sensor: %s\n", esp_err_to_name(err));
+    esp_restart();
+  }
+
+  err = ir_transmitter.init();
+  if (err != ESP_OK) {
+    printf("Error initializing IR transmitter: %s\n", esp_err_to_name(err));
+    esp_restart();
+  }
+
   wifi.on_connect([]() {
     esp_err_t err = mqtt.start();
     if (err != ESP_OK) {
@@ -55,8 +74,12 @@ extern "C" void app_main(void) {
     }
   });
 
-  mqtt.subscribe(MQTT_IR_TRANSMITTER_TOPIC, [](const char* message) {
-    printf("Transmitting IR signal: %s\n", message);
+  mqtt.subscribe(MQTT_IR_TRANSMITTER_TOPIC, [](const char* json_str) {
+    esp_err_t err = ir_transmitter.handle_ir_transmission(json_str);
+    if (err != ESP_OK) {
+      printf("Error handling IR transmission: %s\n", esp_err_to_name(err));
+      return;
+    }
   });
 
   TickType_t last_check = 0;
@@ -66,13 +89,12 @@ extern "C" void app_main(void) {
     if (now - last_check >= pdMS_TO_TICKS(TEMPERATURE_PUBLISH_INTERVAL_MS)) {
       last_check = now;
 
-      float current_temperature = 20.0;
-      float current_humidity = 50.0;
+      TemperatureReading reading = temperature_sensor.read();
 
-      char message[80];
+      char message[72];
       snprintf(message, sizeof(message),
-               "{\"currentTemperature\":%.2f,\"currentHumidity\":\"%.2f\"}",
-               current_temperature, current_humidity);
+               "{\"temperature\":%.1f,\"humidity\":%.1f}", reading.temperature,
+               reading.humidity);
       mqtt.publish(MQTT_TEMPERATURE_SENSOR_TOPIC, message);
     }
 

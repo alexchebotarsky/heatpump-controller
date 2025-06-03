@@ -9,10 +9,10 @@ constexpr const char* SIGNAL_KEY = "signal";
 
 // PWM configuration
 constexpr const ledc_mode_t PWM_SPEED_MODE = LEDC_LOW_SPEED_MODE;
-constexpr const uint32_t PWM_FREQUENCY = 38000;                       // 38kHz
-constexpr const ledc_timer_bit_t PWM_RESOLUTION = LEDC_TIMER_10_BIT;  // 2^10
-constexpr const uint32_t PWM_DUTY_OFF = 0;                            // 0%
-constexpr const uint32_t PWM_DUTY_ON = (1 << PWM_RESOLUTION) / 2;     // 50%
+constexpr const uint32_t PWM_FREQUENCY = 38000;                      // 38kHz
+constexpr const ledc_timer_bit_t PWM_RESOLUTION = LEDC_TIMER_8_BIT;  // 2^8=256
+constexpr const uint32_t PWM_DUTY_OFF = 0;                           // 0%
+constexpr const uint32_t PWM_DUTY_ON = (1 << PWM_RESOLUTION) / 2;    // 50%
 
 constexpr uint32_t HEADER_PULSE = 4400;
 constexpr uint32_t HEADER_SPACE = 4350;

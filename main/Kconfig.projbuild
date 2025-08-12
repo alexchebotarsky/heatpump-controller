@@ -63,6 +63,14 @@ config IR_TRANSMITTER_PWM_TIMER
     range 0 3
     default 0
 
+config DEFAULT_MODE
+    string "Default Mode"
+    default "OFF"
+
+config DEFAULT_TARGET_TEMPERATURE
+    int "Default Target Temperature"
+    default 20
+
 config TEMPERATURE_CHECK_INTERVAL_MS
     int "Temperature Check Interval (ms)"
     default 30000

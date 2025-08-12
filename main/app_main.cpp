@@ -3,8 +3,11 @@
 #include "IRTransmitter.hpp"
 #include "LoopManager.hpp"
 #include "MQTTManager.hpp"
+#include "Mode.hpp"
+#include "Storage.hpp"
 #include "TemperatureSensor.hpp"
 #include "WiFiManager.hpp"
+#include "cJSON.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
@@ -18,6 +21,7 @@ constexpr const char* MQTT_TARGET_STATE_TOPIC = CONFIG_MQTT_TARGET_STATE_TOPIC;
 WiFiManager wifi(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
+Storage storage(CONFIG_DEFAULT_MODE, CONFIG_DEFAULT_TARGET_TEMPERATURE);
 LoopManager loop_manager(CONFIG_TEMPERATURE_CHECK_INTERVAL_MS);
 
 TemperatureSensor temperature_sensor(CONFIG_TEMPERATURE_SENSOR_GPIO);
@@ -41,6 +45,12 @@ extern "C" void app_main(void) {
   err = mqtt.init();
   if (err != ESP_OK) {
     printf("Error initializing MQTT client: %s\n", esp_err_to_name(err));
+    esp_restart();
+  }
+
+  err = storage.init();
+  if (err != ESP_OK) {
+    printf("Error initializing storage: %s\n", esp_err_to_name(err));
     esp_restart();
   }
 
@@ -72,22 +82,34 @@ extern "C" void app_main(void) {
     }
   });
 
-  mqtt.subscribe(MQTT_TARGET_STATE_TOPIC, [](const char* json_str) {
-    esp_err_t err = ir_transmitter.handle_ir_transmission(json_str);
-    if (err != ESP_OK) {
-      printf("Error handling IR transmission: %s\n", esp_err_to_name(err));
+  mqtt.subscribe(MQTT_TARGET_STATE_TOPIC, [](const char* message) {
+    // Ignore invalid messages
+    cJSON* root = cJSON_Parse(message);
+    if (!root) {
       return;
     }
+
+    esp_err_t err = storage.populate_from_json(message);
+    if (err != ESP_OK) {
+      printf("Error populating storage from JSON message '%s': %s\n", message,
+             esp_err_to_name(err));
+      return;
+    }
+
+    Mode mode = storage.get_mode();
+    int target_temperature = storage.get_target_temperature();
+    printf("Set target state: mode=%s, target_temperature=%d\n",
+           mode_to_str(mode), target_temperature);
   });
 
   while (true) {
     if (loop_manager.should_run()) {
       TemperatureReading reading = temperature_sensor.read();
 
-      char message[72];
+      char message[256];
       snprintf(message, sizeof(message),
-               "{\"temperature\":%.1f,\"humidity\":%.1f}", reading.temperature,
-               reading.humidity);
+               "{\"currentTemperature\":%.1f,\"currentHumidity\":%.1f}",
+               reading.temperature, reading.humidity);
       mqtt.publish(MQTT_CURRENT_STATE_TOPIC, message);
     }
 

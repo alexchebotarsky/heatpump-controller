@@ -4,8 +4,6 @@
 
 #include "dht.h"
 
-constexpr char MAX_SENSORS = 1;
-
 TemperatureSensor::TemperatureSensor(const int gpio_pin)
     : gpio(static_cast<gpio_num_t>(gpio_pin)) {}
 
@@ -28,7 +26,8 @@ TemperatureReading TemperatureSensor::read() {
 
   esp_err_t err = dht_read_data(DHT_TYPE_AM2301, gpio, &humidity, &temperature);
   if (err != ESP_OK) {
-    printf("Error getting temperature reading: %s\n", esp_err_to_name(err));
+    printf("Error reading from TemperatureSensor on gpio %d: %s\n", gpio,
+           esp_err_to_name(err));
     return TemperatureReading{0, 0};
   }
 

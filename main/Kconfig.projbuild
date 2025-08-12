@@ -33,17 +33,17 @@ config MQTT_RETENTION_POLICY
         0 - no retention
         1 - retain last message
 
-config MQTT_TEMPERATURE_SENSOR_TOPIC
+config MQTT_CURRENT_STATE_TOPIC
     string "MQTT Current State Topic"
-    default "heatpump/temperature-sensor"
+    default "thermostat/current-state"
     help
-        MQTT topic to publish temperature readings to.
+        MQTT topic to publish current state to.
 
-config MQTT_IR_TRANSMITTER_TOPIC
-    string "MQTT IR Transmitter Topic"
-    default "heatpump/ir-transmitter"
+config MQTT_TARGET_STATE_TOPIC
+    string "MQTT Target State Topic"
+    default "thermostat/set/target-state"
     help
-        MQTT topic to subscribe to and listen for ir signals for transmission.
+        MQTT topic to subscribe to and listen for target state changes.
 
 config TEMPERATURE_SENSOR_GPIO
     int "Temperature Sensor GPIO Pin"
@@ -63,10 +63,11 @@ config IR_TRANSMITTER_PWM_TIMER
     range 0 3
     default 0
 
-config TEMPERATURE_PUBLISH_INTERVAL_MS
-    int "Temperature Publish Interval (ms)"
+config TEMPERATURE_CHECK_INTERVAL_MS
+    int "Temperature Check Interval (ms)"
     default 30000
     help
-        Interval for how often the controller publishes temperature readings.
+        Interval for how often the controller checks the current temperature
+        against the target temperature.
 
 endmenu

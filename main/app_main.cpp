@@ -6,6 +6,7 @@
 #include "Mode.hpp"
 #include "Storage.hpp"
 #include "TemperatureSensor.hpp"
+#include "TimeServer.hpp"
 #include "WiFiManager.hpp"
 #include "cJSON.h"
 #include "freertos/FreeRTOS.h"
@@ -23,6 +24,7 @@ MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
 Storage storage(CONFIG_DEFAULT_MODE, CONFIG_DEFAULT_TARGET_TEMPERATURE);
 LoopManager loop_manager(CONFIG_TEMPERATURE_CHECK_INTERVAL_MS);
+TimeServer time_server;
 
 TemperatureSensor temperature_sensor(CONFIG_TEMPERATURE_SENSOR_GPIO);
 IRTransmitter ir_transmitter(CONFIG_IR_TRANSMITTER_GPIO,
@@ -67,6 +69,14 @@ extern "C" void app_main(void) {
   }
 
   wifi.on_connect([]() {
+    esp_err_t err = time_server.init();
+    if (err != ESP_OK) {
+      printf("Error initializing time server: %s\n", esp_err_to_name(err));
+      esp_restart();
+    }
+  });
+
+  wifi.on_connect([]() {
     esp_err_t err = mqtt.start();
     if (err != ESP_OK) {
       printf("Error starting MQTT client: %s\n", esp_err_to_name(err));
@@ -108,8 +118,9 @@ extern "C" void app_main(void) {
 
       char message[256];
       snprintf(message, sizeof(message),
-               "{\"currentTemperature\":%.1f,\"currentHumidity\":%.1f}",
-               reading.temperature, reading.humidity);
+               "{\"currentTemperature\":%.1f,\"currentHumidity\":%.1f,"
+               "\"timestamp\":\"%s\"}",
+               reading.temperature, reading.humidity, time_server.timestamp());
       mqtt.publish(MQTT_CURRENT_STATE_TOPIC, message);
     }
 

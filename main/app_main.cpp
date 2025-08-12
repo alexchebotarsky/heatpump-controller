@@ -4,6 +4,7 @@
 #include "LoopManager.hpp"
 #include "MQTTManager.hpp"
 #include "Mode.hpp"
+#include "OperatingState.hpp"
 #include "Storage.hpp"
 #include "TemperatureSensor.hpp"
 #include "TimeServer.hpp"
@@ -117,6 +118,9 @@ extern "C" void app_main(void) {
       return;
     }
 
+    // Force run immediately to apply the changes
+    loop_manager.force_run();
+
     Mode mode = storage.get_mode();
     int target_temperature = storage.get_target_temperature();
     printf("Set target state: mode=%s, target_temperature=%d\n",
@@ -126,14 +130,30 @@ extern "C" void app_main(void) {
   while (true) {
     if (loop_manager.should_run()) {
       TemperatureReading reading = temperature_sensor.read();
+      int target_temperature = storage.get_target_temperature();
+      Mode mode = storage.get_mode();
+
+      // Since we don't know exactly what the heatpump does right now, we just
+      // estimate based on target and current temperatures.
+      OperatingState operating_state = OperatingState::IDLE;
+      if (reading.temperature > target_temperature &&
+          (mode == Mode::AUTO || mode == Mode::COOL)) {
+        operating_state = OperatingState::COOLING;
+      } else if (reading.temperature < target_temperature &&
+                 (mode == Mode::AUTO || mode == Mode::HEAT)) {
+        operating_state = OperatingState::HEATING;
+      } else {
+        operating_state = OperatingState::IDLE;
+      }
 
       char message[256];
       snprintf(message, sizeof(message),
-               "{\"deviceId\":\"%s\",\"currentTemperature\":%.1f,"
+               "{\"deviceId\":\"%s\",\"operatingState\":\"%s\","
+               "\"currentTemperature\":%.1f,"
                "\"currentHumidity\":%.1f,"
                "\"timestamp\":\"%s\"}",
-               DEVICE_ID, reading.temperature, reading.humidity,
-               time_server.timestamp());
+               DEVICE_ID, operating_state_to_str(operating_state),
+               reading.temperature, reading.humidity, time_server.timestamp());
       mqtt.publish(MQTT_CURRENT_STATE_TOPIC, message);
     }
 

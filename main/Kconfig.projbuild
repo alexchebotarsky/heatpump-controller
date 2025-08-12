@@ -1,5 +1,9 @@
 menu "Environment Variables"
 
+config DEVICE_ID
+    string "Device ID"
+    default ""
+
 config WIFI_SSID
     string "WiFi SSID"
     default ""

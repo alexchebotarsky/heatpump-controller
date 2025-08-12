@@ -19,6 +19,8 @@ constexpr const char* MQTT_CURRENT_STATE_TOPIC =
     CONFIG_MQTT_CURRENT_STATE_TOPIC;
 constexpr const char* MQTT_TARGET_STATE_TOPIC = CONFIG_MQTT_TARGET_STATE_TOPIC;
 
+constexpr const char* DEVICE_ID = CONFIG_DEVICE_ID;
+
 WiFiManager wifi(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
@@ -99,6 +101,15 @@ extern "C" void app_main(void) {
       return;
     }
 
+    // Ignore message that don't have deviceId or it doesn't match this device
+    cJSON* device_id_item = cJSON_GetObjectItem(root, "deviceId");
+    if (!cJSON_IsString(device_id_item) ||
+        strcmp(device_id_item->valuestring, DEVICE_ID) != 0) {
+      cJSON_Delete(root);
+      return;
+    }
+    cJSON_Delete(root);
+
     esp_err_t err = storage.populate_from_json(message);
     if (err != ESP_OK) {
       printf("Error populating storage from JSON message '%s': %s\n", message,
@@ -118,9 +129,11 @@ extern "C" void app_main(void) {
 
       char message[256];
       snprintf(message, sizeof(message),
-               "{\"currentTemperature\":%.1f,\"currentHumidity\":%.1f,"
+               "{\"deviceId\":\"%s\",\"currentTemperature\":%.1f,"
+               "\"currentHumidity\":%.1f,"
                "\"timestamp\":\"%s\"}",
-               reading.temperature, reading.humidity, time_server.timestamp());
+               DEVICE_ID, reading.temperature, reading.humidity,
+               time_server.timestamp());
       mqtt.publish(MQTT_CURRENT_STATE_TOPIC, message);
     }
 

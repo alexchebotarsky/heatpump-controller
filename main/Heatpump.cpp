@@ -212,18 +212,18 @@ std::string Heatpump::to_binary_state() {
   int chsm = (temp + fan) % 16;
   int cs = mo ^ 1;
 
-  std::string result = BINARY_HEADER;
-  result += std::bitset<4>(temp).to_string();
-  result += "0000";
-  result += std::bitset<4>(fan).to_string();
-  result += "0";
-  result += std::to_string(p);
-  result += std::bitset<2>(mo).to_string();
-  result += "00000000";
-  result += std::bitset<4>(chsm).to_string();
-  result += "0";
-  result += std::to_string(p);
-  result += std::bitset<2>(cs).to_string();
+  static std::string state = BINARY_HEADER;
+  state += std::bitset<4>(temp).to_string();
+  state += "0000";
+  state += std::bitset<4>(fan).to_string();
+  state += "0";
+  state += std::to_string(p);
+  state += std::bitset<2>(mo).to_string();
+  state += "00000000";
+  state += std::bitset<4>(chsm).to_string();
+  state += "0";
+  state += std::to_string(p);
+  state += std::bitset<2>(cs).to_string();
 
-  return result;
+  return state;
 }

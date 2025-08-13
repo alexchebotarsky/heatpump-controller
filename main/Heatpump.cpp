@@ -177,7 +177,14 @@ esp_err_t Heatpump::populate_from_json(const char* json_str) {
   return ESP_OK;
 }
 
-std::string Heatpump::to_binary_state() {
+void int_to_bin(uint32_t value, int bits, char* dest) {
+  for (int i = bits - 1; i >= 0; --i) {
+    *dest++ = ((value >> i) & 1) ? '1' : '0';
+  }
+  *dest = '\0';
+}
+
+const char* Heatpump::to_binary_state() {
   // Temperature range conversion: [17-30] to [0-13]
   int temp = target_temperature - 17;
 
@@ -212,18 +219,30 @@ std::string Heatpump::to_binary_state() {
   int chsm = (temp + fan) % 16;
   int cs = mo ^ 1;
 
-  static std::string state = BINARY_HEADER;
-  state += std::bitset<4>(temp).to_string();
-  state += "0000";
-  state += std::bitset<4>(fan).to_string();
-  state += "0";
-  state += std::to_string(p);
-  state += std::bitset<2>(mo).to_string();
-  state += "00000000";
-  state += std::bitset<4>(chsm).to_string();
-  state += "0";
-  state += std::to_string(p);
-  state += std::bitset<2>(cs).to_string();
+  // Convert to binary
+  char temp_bin[5];
+  int_to_bin(temp, 4, temp_bin);
+
+  char fan_bin[5];
+  int_to_bin(fan, 4, fan_bin);
+
+  char p_bin[2];
+  int_to_bin(p, 1, p_bin);
+
+  char mo_bin[3];
+  int_to_bin(mo, 2, mo_bin);
+
+  char chsm_bin[5];
+  int_to_bin(chsm, 4, chsm_bin);
+
+  char cs_bin[3];
+  int_to_bin(cs, 2, cs_bin);
+
+  // Combine all binary strings into the final state
+  static char state[73];
+  snprintf(state, sizeof(state), "%s%s0000%s0%s%s00000000%s0%s%s",
+           BINARY_HEADER, temp_bin, fan_bin, p_bin, mo_bin, chsm_bin, p_bin,
+           cs_bin);
 
   return state;
 }

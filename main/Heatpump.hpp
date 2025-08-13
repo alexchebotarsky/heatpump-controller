@@ -1,8 +1,6 @@
 #ifndef HEATPUMP_HPP
 #define HEATPUMP_HPP
 
-#include <string>
-
 #include "Mode.hpp"
 #include "esp_err.h"
 
@@ -22,7 +20,7 @@ class Heatpump {
 
   esp_err_t populate_from_json(const char* json);
 
-  std::string to_binary_state();
+  const char* to_binary_state();
 
  private:
   Mode mode;

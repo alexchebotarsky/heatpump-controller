@@ -123,7 +123,7 @@ extern "C" void app_main(void) {
     loop_manager.force_run();
 
     // Transmit new state
-    const char* signal = heatpump.to_binary_state().c_str();
+    const char* signal = heatpump.to_binary_state();
     ir_transmitter.transmit_ir_signal(signal);
 
     Mode mode = heatpump.get_mode();
@@ -151,11 +151,10 @@ extern "C" void app_main(void) {
         operating_state = OperatingState::IDLE;
       }
 
-      char message[256];
+      char message[165];
       snprintf(message, sizeof(message),
                "{\"deviceId\":\"%s\",\"operatingState\":\"%s\","
-               "\"currentTemperature\":%.1f,"
-               "\"currentHumidity\":%.1f,"
+               "\"currentTemperature\":%.1f,\"currentHumidity\":%.1f,"
                "\"timestamp\":\"%s\"}",
                DEVICE_ID, operating_state_to_str(operating_state),
                reading.temperature, reading.humidity, time_server.timestamp());

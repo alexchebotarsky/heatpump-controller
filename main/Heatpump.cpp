@@ -77,6 +77,10 @@ esp_err_t Heatpump::set_mode(const Mode mode) {
 Mode Heatpump::get_mode() { return mode; }
 
 esp_err_t Heatpump::set_target_temperature(const int target_temperature) {
+  if (target_temperature < 17 || target_temperature > 30) {
+    return ESP_ERR_INVALID_ARG;
+  }
+
   nvs_handle_t nvs_storage;
   esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_storage);
   if (err != ESP_OK) {
@@ -105,6 +109,10 @@ esp_err_t Heatpump::set_target_temperature(const int target_temperature) {
 int Heatpump::get_target_temperature() { return target_temperature; }
 
 esp_err_t Heatpump::set_fan_speed(const int fan_speed) {
+  if (fan_speed < 0 || fan_speed > 100) {
+    return ESP_ERR_INVALID_ARG;
+  }
+
   nvs_handle_t nvs_storage;
   esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_storage);
   if (err != ESP_OK) {
@@ -138,34 +146,27 @@ esp_err_t Heatpump::populate_from_json(const char* json_str) {
   }
 
   cJSON* mode_item = cJSON_GetObjectItem(root, MODE_JSON_KEY);
-  if (!cJSON_IsString(mode_item)) {
-    cJSON_Delete(root);
-    return ESP_ERR_INVALID_ARG;
-  }
-
-  esp_err_t err = set_mode(str_to_mode(mode_item->valuestring));
-  if (err != ESP_OK) {
-    cJSON_Delete(root);
-    return err;
+  if (cJSON_IsString(mode_item)) {
+    esp_err_t err = set_mode(str_to_mode(mode_item->valuestring));
+    if (err != ESP_OK) {
+      cJSON_Delete(root);
+      return err;
+    }
   }
 
   cJSON* target_temp_item =
       cJSON_GetObjectItem(root, TARGET_TEMPERATURE_JSON_KEY);
-  if (!cJSON_IsNumber(target_temp_item)) {
-    cJSON_Delete(root);
-    return ESP_ERR_INVALID_ARG;
+  if (cJSON_IsNumber(target_temp_item)) {
+    esp_err_t err = set_target_temperature(target_temp_item->valueint);
+    if (err != ESP_OK) {
+      cJSON_Delete(root);
+      return err;
+    }
   }
 
-  err = set_target_temperature(target_temp_item->valueint);
-  if (err != ESP_OK) {
-    cJSON_Delete(root);
-    return err;
-  }
-
-  // Fan speed is optional
   cJSON* fan_speed_item = cJSON_GetObjectItem(root, FAN_SPEED_JSON_KEY);
   if (cJSON_IsNumber(fan_speed_item)) {
-    err = set_fan_speed(fan_speed_item->valueint);
+    esp_err_t err = set_fan_speed(fan_speed_item->valueint);
     if (err != ESP_OK) {
       cJSON_Delete(root);
       return err;

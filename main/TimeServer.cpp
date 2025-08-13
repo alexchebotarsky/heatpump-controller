@@ -20,8 +20,8 @@ esp_err_t TimeServer::init() {
 }
 
 char* TimeServer::timestamp() {
-  static char buf[32];
+  static char timestamp[32];
   time_t now = time(nullptr);
-  strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
-  return buf;
+  strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+  return timestamp;
 }

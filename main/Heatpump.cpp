@@ -33,7 +33,7 @@ esp_err_t Heatpump::init() {
     return err;
   }
 
-  static char mode[16];
+  char mode[8];
   size_t mode_size = sizeof(mode);
   if (nvs_get_str(nvs_storage, MODE_NVS_KEY, mode, &mode_size) == ESP_OK) {
     this->mode = str_to_mode(mode);

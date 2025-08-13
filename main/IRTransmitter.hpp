@@ -11,7 +11,7 @@ class IRTransmitter {
   IRTransmitter(const int gpio_pin, const int pwm_channel, const int pwm_timer);
   esp_err_t init();
 
-  esp_err_t handle_ir_transmission(const char* signal);
+  esp_err_t transmit_ir_signal(const char* signal);
 
  private:
   const gpio_num_t gpio;

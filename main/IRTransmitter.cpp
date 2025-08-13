@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "cJSON.h"
 #include "esp_rom_sys.h"
 
 constexpr const char* SIGNAL_KEY = "signal";
@@ -65,32 +64,18 @@ esp_err_t IRTransmitter::init() {
   return ESP_OK;
 }
 
-esp_err_t IRTransmitter::handle_ir_transmission(const char* json_signal) {
-  cJSON* root = cJSON_Parse(json_signal);
-  if (!root) {
-    return ESP_ERR_INVALID_ARG;
-  }
-
-  cJSON* signal_item = cJSON_GetObjectItem(root, SIGNAL_KEY);
-  if (!cJSON_IsString(signal_item)) {
-    cJSON_Delete(root);
-    return ESP_ERR_INVALID_ARG;
-  }
-  const char* signal = signal_item->valuestring;
-
+esp_err_t IRTransmitter::transmit_ir_signal(const char* signal) {
   // Send the IR signal twice to ensure reception
   esp_err_t err;
   for (size_t i = 0; i < 2; i++) {
     err = send_signal(signal);
     if (err != ESP_OK) {
-      cJSON_Delete(root);
       return err;
     }
   }
 
   printf("Signal transmitted: %s\n", signal);
 
-  cJSON_Delete(root);
   return ESP_OK;
 }
 

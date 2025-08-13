@@ -1,11 +1,11 @@
 #include <stdio.h>
 
+#include "Heatpump.hpp"
 #include "IRTransmitter.hpp"
 #include "LoopManager.hpp"
 #include "MQTTManager.hpp"
 #include "Mode.hpp"
 #include "OperatingState.hpp"
-#include "Storage.hpp"
 #include "TemperatureSensor.hpp"
 #include "TimeServer.hpp"
 #include "WiFiManager.hpp"
@@ -25,9 +25,10 @@ constexpr const char* DEVICE_ID = CONFIG_DEVICE_ID;
 WiFiManager wifi(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 MQTTManager mqtt(CONFIG_MQTT_BROKER_URL, CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_QOS,
                  CONFIG_MQTT_RETENTION_POLICY);
-Storage storage(CONFIG_DEFAULT_MODE, CONFIG_DEFAULT_TARGET_TEMPERATURE);
 LoopManager loop_manager(CONFIG_TEMPERATURE_CHECK_INTERVAL_MS);
 TimeServer time_server;
+
+Heatpump heatpump(CONFIG_DEFAULT_MODE, CONFIG_DEFAULT_TARGET_TEMPERATURE);
 
 TemperatureSensor temperature_sensor(CONFIG_TEMPERATURE_SENSOR_GPIO);
 IRTransmitter ir_transmitter(CONFIG_IR_TRANSMITTER_GPIO,
@@ -53,9 +54,9 @@ extern "C" void app_main(void) {
     esp_restart();
   }
 
-  err = storage.init();
+  err = heatpump.init();
   if (err != ESP_OK) {
-    printf("Error initializing storage: %s\n", esp_err_to_name(err));
+    printf("Error initializing heatpump: %s\n", esp_err_to_name(err));
     esp_restart();
   }
 
@@ -111,9 +112,9 @@ extern "C" void app_main(void) {
     }
     cJSON_Delete(root);
 
-    esp_err_t err = storage.populate_from_json(message);
+    esp_err_t err = heatpump.populate_from_json(message);
     if (err != ESP_OK) {
-      printf("Error populating storage from JSON message '%s': %s\n", message,
+      printf("Error populating heatpump from JSON message '%s': %s\n", message,
              esp_err_to_name(err));
       return;
     }
@@ -121,8 +122,12 @@ extern "C" void app_main(void) {
     // Force run immediately to apply the changes
     loop_manager.force_run();
 
-    Mode mode = storage.get_mode();
-    int target_temperature = storage.get_target_temperature();
+    // Transmit new state
+    const char* signal = heatpump.to_binary_state().c_str();
+    ir_transmitter.transmit_ir_signal(signal);
+
+    Mode mode = heatpump.get_mode();
+    int target_temperature = heatpump.get_target_temperature();
     printf("Set target state: mode=%s, target_temperature=%d\n",
            mode_to_str(mode), target_temperature);
   });
@@ -130,8 +135,8 @@ extern "C" void app_main(void) {
   while (true) {
     if (loop_manager.should_run()) {
       TemperatureReading reading = temperature_sensor.read();
-      int target_temperature = storage.get_target_temperature();
-      Mode mode = storage.get_mode();
+      int target_temperature = heatpump.get_target_temperature();
+      Mode mode = heatpump.get_mode();
 
       // Since we don't know exactly what the heatpump does right now, we just
       // estimate based on target and current temperatures.

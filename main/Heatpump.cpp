@@ -8,9 +8,6 @@
 
 constexpr const char* NVS_NAMESPACE = "heatpump";
 
-constexpr const char* BINARY_HEADER =
-    "1111001000001101000000111111110000000001";
-
 constexpr const char* MODE_NVS_KEY = "mode";
 constexpr const char* MODE_JSON_KEY = "mode";
 
@@ -19,6 +16,9 @@ constexpr const char* TARGET_TEMPERATURE_JSON_KEY = "targetTemperature";
 
 constexpr const char* FAN_SPEED_NVS_KEY = "fan_speed";
 constexpr const char* FAN_SPEED_JSON_KEY = "fanSpeed";
+
+constexpr const char* BINARY_HEADER =
+    "1111001000001101000000111111110000000001";
 
 Heatpump::Heatpump(const char* default_mode,
                    const int default_target_temperature)

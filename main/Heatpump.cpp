@@ -177,7 +177,7 @@ esp_err_t Heatpump::populate_from_json(const char* json_str) {
   return ESP_OK;
 }
 
-void int_to_bin(uint32_t value, int bits, char* dest) {
+void int_to_bin(char* dest, uint32_t value, int bits) {
   for (int i = bits - 1; i >= 0; --i) {
     *dest++ = ((value >> i) & 1) ? '1' : '0';
   }
@@ -221,22 +221,22 @@ const char* Heatpump::to_binary_state() {
 
   // Convert to binary
   char temp_bin[5];
-  int_to_bin(temp, 4, temp_bin);
+  int_to_bin(temp_bin, temp, 4);
 
   char fan_bin[5];
-  int_to_bin(fan, 4, fan_bin);
+  int_to_bin(fan_bin, fan, 4);
 
   char p_bin[2];
-  int_to_bin(p, 1, p_bin);
+  int_to_bin(p_bin, p, 1);
 
   char mo_bin[3];
-  int_to_bin(mo, 2, mo_bin);
+  int_to_bin(mo_bin, mo, 2);
 
   char chsm_bin[5];
-  int_to_bin(chsm, 4, chsm_bin);
+  int_to_bin(chsm_bin, chsm, 4);
 
   char cs_bin[3];
-  int_to_bin(cs, 2, cs_bin);
+  int_to_bin(cs_bin, cs, 2);
 
   // Combine all binary strings into the final state
   static char state[73];

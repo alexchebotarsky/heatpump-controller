@@ -28,7 +28,7 @@ Heatpump::Heatpump(const char* default_mode,
 
 esp_err_t Heatpump::init() {
   nvs_handle_t nvs_storage;
-  esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_storage);
+  esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_storage);
   if (err != ESP_OK) {
     return err;
   }

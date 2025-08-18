@@ -16,10 +16,6 @@ config MQTT_BROKER_URL
     string "MQTT Broker URL"
     default "mqtt://localhost"
 
-config MQTT_CLIENT_ID
-    string "MQTT Client ID"
-    default "heatpump-controller"
-
 config MQTT_QOS
     int "MQTT Quality of Service (QoS)"
     range 0 2

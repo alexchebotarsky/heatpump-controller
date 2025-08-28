@@ -132,6 +132,10 @@ extern "C" void app_main(void) {
            mode_to_str(mode), target_temperature);
   });
 
+  // Transmit saved state on startup
+  const char* signal = heatpump.to_binary_state();
+  ir_transmitter.transmit_ir_signal(signal);
+
   while (true) {
     if (loop_manager.should_run()) {
       TemperatureReading reading = temperature_sensor.read();

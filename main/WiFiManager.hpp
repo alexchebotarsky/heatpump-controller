@@ -1,8 +1,10 @@
 #ifndef WIFI_MANAGER_HPP
 #define WIFI_MANAGER_HPP
 
+#include <cstdint>
 #include <vector>
 
+#include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
 

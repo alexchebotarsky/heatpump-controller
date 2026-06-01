@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "esp_err.h"
 #include "esp_event.h"
 #include "mqtt_client.h"
 

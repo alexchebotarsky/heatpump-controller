@@ -2,6 +2,7 @@
 #define TEMPERATURE_SENSOR_HPP
 
 #include "driver/gpio.h"
+#include "esp_err.h"
 
 struct TemperatureReading {
   float temperature;

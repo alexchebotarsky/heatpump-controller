@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "Heatpump.hpp"
 #include "IRTransmitter.hpp"
@@ -10,6 +10,7 @@
 #include "TimeServer.hpp"
 #include "WiFiManager.hpp"
 #include "cJSON.h"
+#include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
